@@ -1,12 +1,6 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-} from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
@@ -29,7 +23,6 @@ import {
 @Component({
   selector: 'app-converter',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -56,11 +49,7 @@ export class ConverterComponent implements OnInit, OnDestroy {
     RUB: '₽',
   };
 
-  constructor(
-    private fb: FormBuilder,
-    private converterService: ConverterService,
-    private cdRef: ChangeDetectorRef
-  ) {
+  constructor(private converterService: ConverterService) {
     this.converterForm = new FormGroup({
       fromCurrency: new FormControl('USD'),
       toCurrency: new FormControl('EUR'),
@@ -105,7 +94,7 @@ export class ConverterComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         debounceTime(500),
         distinctUntilChanged(),
-        tap(() => ((this.isLoading = true), this.cdRef.markForCheck())),
+        tap(() => (this.isLoading = true)),
         switchMap(amount =>
           this.convertFromTo(
             this.converterForm.get('fromCurrency')?.value,
@@ -119,7 +108,6 @@ export class ConverterComponent implements OnInit, OnDestroy {
         if (result) {
           this.converterForm.patchValue({ toAmount: result }, { emitEvent: false });
         }
-        this.cdRef.markForCheck();
       });
     this.converterForm
       .get('toAmount')
@@ -127,7 +115,7 @@ export class ConverterComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         debounceTime(500),
         distinctUntilChanged(),
-        tap(() => ((this.isLoading = true), this.cdRef.markForCheck())),
+        tap(() => (this.isLoading = true)),
         switchMap(amount =>
           this.convertFromTo(
             this.converterForm.get('toCurrency')?.value,
@@ -141,7 +129,6 @@ export class ConverterComponent implements OnInit, OnDestroy {
         if (result) {
           this.converterForm.patchValue({ fromAmount: result }, { emitEvent: false });
         }
-        this.cdRef.markForCheck();
       });
 
     combineLatest([
@@ -150,7 +137,7 @@ export class ConverterComponent implements OnInit, OnDestroy {
     ])
       .pipe(
         takeUntil(this.destroy$),
-        tap(() => ((this.isLoading = true), this.cdRef.markForCheck())),
+        tap(() => (this.isLoading = true)),
         switchMap(() =>
           this.convertFromTo(
             this.converterForm.get('fromCurrency')?.value,
@@ -165,7 +152,6 @@ export class ConverterComponent implements OnInit, OnDestroy {
         if (result) {
           this.converterForm.patchValue({ toAmount: result }, { emitEvent: false });
         }
-        this.cdRef.markForCheck();
       });
   }
 
