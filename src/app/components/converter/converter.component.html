@@ -1,7 +1,14 @@
 <div class="converter-container">
   <h1 class="mat-headline-4">Currency converter</h1>
   <h2 class="mat-subtitle-1">Available currencies: RUB, USD, EUR, GBP</h2>
-
+  <div class="actions-block">
+    <button mat-raised-button color="primary" (click)="switchCurrencies()">
+      Switch Currencies
+    </button>
+    <div class="loading-spinner" *ngIf="isLoading">
+      <mat-spinner diameter="20"></mat-spinner>
+    </div>
+  </div>
   <form [formGroup]="converterForm" class="converter-form">
     <div class="currency-block">
       <mat-form-field appearance="outline">
@@ -19,7 +26,7 @@
         <input
           matInput
           type="text"
-          [value]="converterForm.get('fromAmount')?.value | currency: '' : '' : '1.0-2' : 'en-US'"
+          [value]="converterForm.get('fromAmount')?.value | currency: '' : '' : '1.0-3' : 'en-US'"
           (input)="onAmountInput($event, 'fromAmount')"
           min="0"
         />
@@ -44,7 +51,7 @@
         <input
           matInput
           type="text"
-          [value]="converterForm.get('toAmount')?.value | currency: '' : '' : '1.0-2' : 'en-US'"
+          [value]="converterForm.get('toAmount')?.value | currency: '' : '' : '1.0-3' : 'en-US'"
           (input)="onAmountInput($event, 'toAmount')"
           min="0"
         />
@@ -54,12 +61,4 @@
       </mat-form-field>
     </div>
   </form>
-
-  <div class="loading-spinner" *ngIf="isLoading">
-    <mat-spinner diameter="40"></mat-spinner>
-  </div>
-
-  <button mat-fab color="primary" class="switch-button" (click)="switchCurrencies()">
-    <mat-icon>swap_vert</mat-icon>
-  </button>
 </div>

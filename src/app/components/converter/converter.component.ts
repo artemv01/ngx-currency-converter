@@ -95,11 +95,7 @@ export class ConverterComponent implements OnInit, OnDestroy {
       this.converterForm.patchValue({ toAmount: 0 }, { emitEvent: false });
       return of(null);
     }
-    return this.converterService.convertFromTo(
-      this.converterForm.get('fromCurrency')?.value,
-      this.converterForm.get('toCurrency')?.value,
-      amount
-    );
+    return this.converterService.convertFromTo(from, to, amount);
   }
 
   ngOnInit() {

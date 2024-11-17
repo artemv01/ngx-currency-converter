@@ -6,6 +6,10 @@
   min-height: 400px;
 }
 
+.mat-headline-4 {
+  margin-bottom: 24px;
+}
+
 .converter-form {
   display: flex;
   flex-direction: column;
@@ -28,18 +32,10 @@ mat-form-field {
 .loading-spinner {
   display: flex;
   justify-content: center;
-  margin-top: 1rem;
 }
 
 .currency-symbol {
   color: rgba(0, 0, 0, 0.54);
-}
-
-.switch-button {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  z-index: 1000;
 }
 
 @media (max-width: 480px) {
@@ -51,4 +47,10 @@ mat-form-field {
   mat-form-field {
     width: 100%;
   }
+}
+
+.actions-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
