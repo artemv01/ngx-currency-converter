@@ -1,1 +1,33 @@
-/* You can add global styles to this file, and also import other style files */
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: #fafafa;
+}
+
+.mat-headline-4 {
+  margin: 0;
+  padding: 1rem 0;
+  color: #3f51b5;
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+.mat-subtitle-1 {
+  margin: 0;
+  padding-bottom: 1rem;
+  color: rgba(0, 0, 0, 0.87);
+  font-size: 1rem;
+}
+
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
