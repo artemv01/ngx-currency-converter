@@ -1,10 +1,23 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
+import { CommonModule, CurrencyPipe } from '@angular/common';
+import {
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { ConverterService } from '../../services/converter.service';
 import {
   Observable,
@@ -16,11 +29,13 @@ import {
   combineLatest,
   startWith,
   of,
+  tap,
 } from 'rxjs';
 
 @Component({
   selector: 'app-converter',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -28,6 +43,9 @@ import {
     MatSelectModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    MatButtonModule,
+    MatIconModule,
+    CurrencyPipe,
   ],
   template: `
     <div class="converter-container">
@@ -50,16 +68,19 @@ import {
             <mat-label>Amount</mat-label>
             <input
               matInput
-              type="number"
-              formControlName="fromAmount"
+              type="text"
+              [value]="
+                converterForm.get('fromAmount')?.value
+                  | currency : '' : '' : '1.0-2' : 'en-US'
+              "
+              (input)="onAmountInput($event, 'fromAmount')"
               min="0"
             />
-            <span matTextSuffix>{{
-              converterForm.get('fromCurrency')?.value
+            <span matTextSuffix class="currency-symbol">{{
+              getCurrencySymbol(converterForm.get('fromCurrency')?.value)
             }}</span>
           </mat-form-field>
         </div>
-
         <div class="currency-block">
           <mat-form-field appearance="outline">
             <mat-label>To Currency</mat-label>
@@ -73,9 +94,18 @@ import {
 
           <mat-form-field appearance="outline">
             <mat-label>Amount</mat-label>
-            <input matInput type="number" formControlName="toAmount" min="0" />
-            <span matTextSuffix>{{
-              converterForm.get('toCurrency')?.value
+            <input
+              matInput
+              type="text"
+              [value]="
+                converterForm.get('toAmount')?.value
+                  | currency : '' : '' : '1.0-2' : 'en-US'
+              "
+              (input)="onAmountInput($event, 'toAmount')"
+              min="0"
+            />
+            <span matTextSuffix class="currency-symbol">{{
+              getCurrencySymbol(converterForm.get('toCurrency')?.value)
             }}</span>
           </mat-form-field>
         </div>
@@ -84,6 +114,15 @@ import {
       <div class="loading-spinner" *ngIf="isLoading">
         <mat-spinner diameter="40"></mat-spinner>
       </div>
+
+      <button
+        mat-fab
+        color="primary"
+        class="switch-button"
+        (click)="switchCurrencies()"
+      >
+        <mat-icon>swap_vert</mat-icon>
+      </button>
     </div>
   `,
   styles: [
@@ -92,6 +131,8 @@ import {
         max-width: 600px;
         margin: 2rem auto;
         padding: 0 1rem;
+        position: relative;
+        min-height: 400px;
       }
 
       .converter-form {
@@ -99,6 +140,7 @@ import {
         flex-direction: column;
         gap: 2rem;
         margin-top: 2rem;
+        position: relative;
       }
 
       .currency-block {
@@ -118,6 +160,17 @@ import {
         margin-top: 1rem;
       }
 
+      .currency-symbol {
+        color: rgba(0, 0, 0, 0.54);
+      }
+
+      .switch-button {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 1000;
+      }
+
       @media (max-width: 480px) {
         .currency-block {
           flex-direction: column;
@@ -135,51 +188,85 @@ export class ConverterComponent implements OnInit, OnDestroy {
   converterForm: FormGroup;
   isLoading = false;
   private destroy$ = new Subject<void>();
-  private fromValueChange$ = new Subject<void>();
-  private toValueChange$ = new Subject<void>();
+
+  private currencySymbols: { [key: string]: string } = {
+    USD: '$',
+    EUR: '€',
+    GBP: '£',
+    RUB: '₽',
+  };
 
   constructor(
     private fb: FormBuilder,
-    private converterService: ConverterService
+    private converterService: ConverterService,
+    private cdRef: ChangeDetectorRef
   ) {
     this.converterForm = new FormGroup({
-      fromCurrency: new FormControl('USD', {nonNullable: true}),
-      toCurrency: new FormControl('USD'),
+      fromCurrency: new FormControl('USD'),
+      toCurrency: new FormControl('EUR'),
       fromAmount: new FormControl(0),
       toAmount: new FormControl(0),
     });
   }
 
+  getCurrencySymbol(currency: string): string {
+    return this.currencySymbols[currency] || currency;
+  }
+
+  switchCurrencies(): void {
+    const fromCurrency = this.converterForm.get('fromCurrency')?.value;
+    const toCurrency = this.converterForm.get('toCurrency')?.value;
+
+    this.converterForm.patchValue({
+      fromCurrency: toCurrency,
+      toCurrency: fromCurrency,
+    });
+  }
+
+  onAmountInput(event: Event, inputType: 'fromAmount' | 'toAmount'): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value.replace(/[^0-9.]/g, '');
+    const numericValue = parseFloat(value);
+    this.converterForm.patchValue({ [inputType]: numericValue || 0 });
+  }
+
+  private convertFromTo(from: string, to: string, amount: number) {
+    if (!amount || amount === 0) {
+      this.converterForm.patchValue({ toAmount: 0 }, { emitEvent: false });
+      return of(null);
+    }
+    return this.converterService.convertFromTo(
+      this.converterForm.get('fromCurrency')?.value,
+      this.converterForm.get('toCurrency')?.value,
+      amount
+    );
+  }
+
   ngOnInit() {
     this.converterForm
-      .get('fromAmount')?.valueChanges.pipe(
+      .get('fromAmount')
+      ?.valueChanges.pipe(
         takeUntil(this.destroy$),
         debounceTime(500),
         distinctUntilChanged(),
-        switchMap((value) => {
-          if (!value || value === 0) {
-            this.converterForm.patchValue(
-              { toAmount: 0 },
-              { emitEvent: false }
-            );
-            return of(null);
-          }
-          this.isLoading = true;
-          return this.converterService.convertFromTo(
+        tap(() => (this.isLoading = true, this.cdRef.markForCheck())),
+        switchMap((amount) =>
+          this.convertFromTo(
             this.converterForm.get('fromCurrency')?.value,
             this.converterForm.get('toCurrency')?.value,
-            value
-          );
-        })
+            amount
+          )
+        ),
+        tap(() => (this.isLoading = false))
       )
       .subscribe((result) => {
-        this.isLoading = false;
         if (result) {
           this.converterForm.patchValue(
             { toAmount: result },
             { emitEvent: false }
           );
         }
+        this.cdRef.markForCheck();
       });
 
     this.converterForm
@@ -188,30 +275,24 @@ export class ConverterComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         debounceTime(500),
         distinctUntilChanged(),
-        switchMap((value) => {
-          if (!value || value === 0) {
-            this.converterForm.patchValue(
-              { fromAmount: 0 },
-              { emitEvent: false }
-            );
-            return of(null);
-          }
-          this.isLoading = true;
-          return this.converterService.convertFromTo(
+        tap(() => (this.isLoading = true, this.cdRef.markForCheck())),
+        switchMap((amount) =>
+          this.convertFromTo(
             this.converterForm.get('toCurrency')?.value,
             this.converterForm.get('fromCurrency')?.value,
-            value
-          );
-        })
+            amount
+          )
+        ),
+        tap(() => (this.isLoading = false))
       )
       .subscribe((result) => {
-        this.isLoading = false;
         if (result) {
           this.converterForm.patchValue(
             { fromAmount: result },
             { emitEvent: false }
           );
         }
+        this.cdRef.markForCheck();
       });
 
     combineLatest([
@@ -222,26 +303,25 @@ export class ConverterComponent implements OnInit, OnDestroy {
     ])
       .pipe(
         takeUntil(this.destroy$),
-        switchMap(() => {
-          const fromAmount = this.converterForm.get('fromAmount')?.value;
-          if (fromAmount <= 0) {
-            return of();
-          }
-          return this.converterService.convertFromTo(
+        tap(() => (this.isLoading = true, this.cdRef.markForCheck())),
+        switchMap((amount) =>
+          this.convertFromTo(
             this.converterForm.get('fromCurrency')?.value,
             this.converterForm.get('toCurrency')?.value,
-            fromAmount
-          );
-        })
+            this.converterForm.get('fromAmount')?.value
+          )
+        ),
+
+        tap(() => (this.isLoading = false))
       )
       .subscribe((result) => {
-        this.isLoading = false;
         if (result) {
           this.converterForm.patchValue(
             { toAmount: result },
             { emitEvent: false }
           );
         }
+        this.cdRef.markForCheck();
       });
   }
 
