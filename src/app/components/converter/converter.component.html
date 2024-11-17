@@ -1,0 +1,65 @@
+<div class="converter-container">
+  <h1 class="mat-headline-4">Currency converter</h1>
+  <h2 class="mat-subtitle-1">Available currencies: RUB, USD, EUR, GBP</h2>
+
+  <form [formGroup]="converterForm" class="converter-form">
+    <div class="currency-block">
+      <mat-form-field appearance="outline">
+        <mat-label>From Currency</mat-label>
+        <mat-select formControlName="fromCurrency">
+          <mat-option value="RUB">RUB</mat-option>
+          <mat-option value="USD">USD</mat-option>
+          <mat-option value="EUR">EUR</mat-option>
+          <mat-option value="GBP">GBP</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Amount</mat-label>
+        <input
+          matInput
+          type="text"
+          [value]="converterForm.get('fromAmount')?.value | currency: '' : '' : '1.0-2' : 'en-US'"
+          (input)="onAmountInput($event, 'fromAmount')"
+          min="0"
+        />
+        <span matTextSuffix class="currency-symbol">{{
+          getCurrencySymbol(converterForm.get('fromCurrency')?.value)
+        }}</span>
+      </mat-form-field>
+    </div>
+    <div class="currency-block">
+      <mat-form-field appearance="outline">
+        <mat-label>To Currency</mat-label>
+        <mat-select formControlName="toCurrency">
+          <mat-option value="RUB">RUB</mat-option>
+          <mat-option value="USD">USD</mat-option>
+          <mat-option value="EUR">EUR</mat-option>
+          <mat-option value="GBP">GBP</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Amount</mat-label>
+        <input
+          matInput
+          type="text"
+          [value]="converterForm.get('toAmount')?.value | currency: '' : '' : '1.0-2' : 'en-US'"
+          (input)="onAmountInput($event, 'toAmount')"
+          min="0"
+        />
+        <span matTextSuffix class="currency-symbol">{{
+          getCurrencySymbol(converterForm.get('toCurrency')?.value)
+        }}</span>
+      </mat-form-field>
+    </div>
+  </form>
+
+  <div class="loading-spinner" *ngIf="isLoading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <button mat-fab color="primary" class="switch-button" (click)="switchCurrencies()">
+    <mat-icon>swap_vert</mat-icon>
+  </button>
+</div>

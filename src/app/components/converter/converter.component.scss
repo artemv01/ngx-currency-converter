@@ -1,0 +1,54 @@
+.converter-container {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  position: relative;
+  min-height: 400px;
+}
+
+.converter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-top: 2rem;
+  position: relative;
+}
+
+.currency-block {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+mat-form-field {
+  flex: 1;
+  min-width: 200px;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.currency-symbol {
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.switch-button {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 1000;
+}
+
+@media (max-width: 480px) {
+  .currency-block {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  mat-form-field {
+    width: 100%;
+  }
+}
