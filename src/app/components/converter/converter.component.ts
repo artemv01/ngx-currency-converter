@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule, CurrencyPipe } from '@angular/common';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
@@ -32,7 +32,6 @@ import {
     MatProgressSpinnerModule,
     MatButtonModule,
     MatIconModule,
-    CurrencyPipe,
   ],
   templateUrl: './converter.component.html',
   styleUrls: ['./converter.component.scss'],
@@ -53,13 +52,21 @@ export class ConverterComponent implements OnInit, OnDestroy {
     this.converterForm = new FormGroup({
       fromCurrency: new FormControl('USD'),
       toCurrency: new FormControl('EUR'),
-      fromAmount: new FormControl(0),
-      toAmount: new FormControl(0),
+      fromAmount: new FormControl(0, [Validators.pattern(/^\d*\.?\d*$/)]),
+      toAmount: new FormControl(0, [Validators.pattern(/^\d*\.?\d*$/)]),
     });
   }
 
   getCurrencySymbol(currency: string): string {
     return this.currencySymbols[currency] || currency;
+  }
+
+  getErrorMessage(controlName: string): string {
+    const control = this.converterForm.get(controlName);
+    if (control?.errors?.['pattern']) {
+      return 'Please enter a correct number';
+    }
+    return '';
   }
 
   switchCurrencies(): void {
@@ -72,16 +79,15 @@ export class ConverterComponent implements OnInit, OnDestroy {
     });
   }
 
-  onAmountInput(event: Event, inputType: 'fromAmount' | 'toAmount'): void {
-    const input = event.target as HTMLInputElement;
-    const value = input.value.replace(/[^0-9.]/g, '');
-    const numericValue = parseFloat(value);
-    this.converterForm.patchValue({ [inputType]: numericValue || 0 });
-  }
-
-  private convertFromTo(from: string, to: string, amount: number) {
-    if (!amount || amount === 0) {
-      this.converterForm.patchValue({ toAmount: 0 }, { emitEvent: false });
+  private convertFromTo(from: string, to: string, amount: string) {
+    if (amount === '0' || amount === '') {
+      this.converterForm.patchValue({ toAmount: '0' }, { emitEvent: false });
+      return of(null);
+    }
+    if (
+      this.converterForm.get('fromAmount')?.invalid ||
+      this.converterForm.get('toAmount')?.invalid
+    ) {
       return of(null);
     }
     return this.converterService.convertFromTo(from, to, amount);
@@ -109,6 +115,7 @@ export class ConverterComponent implements OnInit, OnDestroy {
           this.converterForm.patchValue({ toAmount: result }, { emitEvent: false });
         }
       });
+
     this.converterForm
       .get('toAmount')
       ?.valueChanges.pipe(
@@ -145,7 +152,6 @@ export class ConverterComponent implements OnInit, OnDestroy {
             this.converterForm.get('fromAmount')?.value
           )
         ),
-
         tap(() => (this.isLoading = false))
       )
       .subscribe(result => {

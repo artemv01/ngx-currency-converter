@@ -23,16 +23,13 @@
 
       <mat-form-field appearance="outline">
         <mat-label>Amount</mat-label>
-        <input
-          matInput
-          type="text"
-          [value]="converterForm.get('fromAmount')?.value | currency: '' : '' : '1.0-3' : 'en-US'"
-          (input)="onAmountInput($event, 'fromAmount')"
-          min="0"
-        />
+        <input matInput type="text" formControlName="fromAmount" min="0" />
         <span matTextSuffix class="currency-symbol">{{
           getCurrencySymbol(converterForm.get('fromCurrency')?.value)
         }}</span>
+        <mat-error *ngIf="converterForm.get('fromAmount')?.invalid">
+          {{ getErrorMessage('fromAmount') }}
+        </mat-error>
       </mat-form-field>
     </div>
     <div class="currency-block">
@@ -48,16 +45,13 @@
 
       <mat-form-field appearance="outline">
         <mat-label>Amount</mat-label>
-        <input
-          matInput
-          type="text"
-          [value]="converterForm.get('toAmount')?.value | currency: '' : '' : '1.0-3' : 'en-US'"
-          (input)="onAmountInput($event, 'toAmount')"
-          min="0"
-        />
+        <input matInput type="text" formControlName="toAmount" min="0" />
         <span matTextSuffix class="currency-symbol">{{
           getCurrencySymbol(converterForm.get('toCurrency')?.value)
         }}</span>
+        <mat-error *ngIf="converterForm.get('toAmount')?.invalid">
+          {{ getErrorMessage('toAmount') }}
+        </mat-error>
       </mat-form-field>
     </div>
   </form>
